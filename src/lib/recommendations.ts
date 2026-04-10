@@ -35,8 +35,14 @@ export function getSmartRecommendations(
         lastDone.set(ex.exerciseName, i);
 
         const totalCompleted = ex.sets.reduce((sum, s) => sum + s.repsCompleted, 0);
+        // Use the max reps from any set as the effective target,
+        // so progressive overload compounds across sessions
+        const effectiveTarget = Math.max(
+          profile.defaultReps,
+          ...ex.sets.map((s) => s.repsCompleted),
+        );
         lastPerformance.set(ex.exerciseName, {
-          targetReps: profile.defaultReps,
+          targetReps: effectiveTarget,
           completedReps: totalCompleted,
           sets: ex.sets.length,
         });
@@ -59,6 +65,7 @@ export function getSmartRecommendations(
 
     const perf = lastPerformance.get(name);
     if (perf) {
+      reps = perf.targetReps;
       const targetTotal = perf.targetReps * perf.sets;
       const completionRate = perf.completedReps / targetTotal;
 
