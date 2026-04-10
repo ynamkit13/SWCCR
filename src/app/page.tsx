@@ -19,9 +19,6 @@ export default function WelcomePage() {
       </div>
 
       <div className="flex flex-col gap-3 items-center max-w-sm w-full">
-        <p className="text-muted text-sm">
-          No trainer needed. No gym membership. No data leaves your device.
-        </p>
         <Button
           onClick={() => router.push("/onboarding/setup")}
           className="w-full text-lg py-4"
