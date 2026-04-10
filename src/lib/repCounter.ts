@@ -52,6 +52,13 @@ export class RepCounter {
   }
 
   update(landmarks: Point[]): void {
+    // Skip frame if key landmarks have low visibility
+    const keyIndices = [11, 12, 13, 14, 15, 16]; // shoulders, elbows, wrists
+    const hasLowVisibility = keyIndices.some(
+      (i) => landmarks[i] && (landmarks[i] as any).visibility !== undefined && (landmarks[i] as any).visibility < 0.7
+    );
+    if (hasLowVisibility) return;
+
     const angle = this.config.getAngle(landmarks);
     const nextPhase = this.getNextPhase(angle);
 
