@@ -40,13 +40,8 @@ export default function WorkoutSession() {
   const formAnalyserRef = useRef<FormAnalyser | null>(null);
   const animFrameRef = useRef<number>(0);
 
-  const [exercises, setExercises] = useState<Exercise[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("recommended_exercises");
-      if (saved) return JSON.parse(saved);
-    }
-    return defaultExercises;
-  });
+  const [exercises, setExercises] = useState<Exercise[]>(defaultExercises);
+  const [hydrated, setHydrated] = useState(false);
 
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(1);
@@ -72,6 +67,13 @@ export default function WorkoutSession() {
   const currentFormIssuesRef = useRef<string[]>([]);
 
   const exercise = exercises[exerciseIndex];
+
+  // Load exercises from localStorage after hydration
+  useEffect(() => {
+    const saved = localStorage.getItem("recommended_exercises");
+    if (saved) setExercises(JSON.parse(saved));
+    setHydrated(true);
+  }, []);
 
   // Track container size for skeleton overlay
   useEffect(() => {
