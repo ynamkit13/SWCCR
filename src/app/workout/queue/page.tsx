@@ -215,7 +215,7 @@ export default function QueuePage() {
         <Button variant="secondary" onClick={() => router.back()} className="flex-1">
           Back
         </Button>
-        <Button className="flex-1 text-lg py-4">Start Workout</Button>
+        <Button onClick={() => router.push("/workout/session")} className="flex-1 text-lg py-4">Start Workout</Button>
       </div>
     </div>
   );

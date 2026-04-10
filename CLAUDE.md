@@ -13,16 +13,20 @@ AI Fitness Trainer is a web app that coaches solo gym-goers and home workout ent
 - **Approach:** Test-Driven Development (TDD) — write tests first, then implement
 - **Milestone strategy:** Multiple milestones, each with GitHub issues. See [project_spec_v1.md](project_spec_v1.md) for full milestone breakdown.
 
+### Completed Milestones
+
+**Milestone 1A — UI & Frontend (mock data)** ✅ Merged
+All screens with navigation wired up using mock data. 7 screens, 54 tests.
+
 ### Active Milestone
 
-**Milestone 1 — UI & Frontend (mock data)**
-All screens with navigation wired up using mock data. No camera, no AI, no pose detection yet.
-- Onboarding flow (welcome, setup guide, quiz, AI recommendations review)
-- Home screen
-- Pre-workout queue customisation screen
-- Workout screen (mock exercise display, rep counter UI, skeletal overlay placeholder)
-- Rest timer screen
-- Post-workout summary screen
+**Milestone 1B — Workout UI + Basic Camera**
+Live webcam preview, HUD overlay on camera feed, rest timer, and full workout flow wiring.
+- Webcam preview component (WebRTC getUserMedia)
+- Workout session screen with camera feed
+- HUD overlay (rep counter, mute button, form feedback)
+- Rest timer with countdown and +1 min snooze
+- Full workout flow: queue → workout → rest → summary
 
 ---
 
