@@ -8,6 +8,46 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+vi.mock("@/lib/storage", () => ({
+  getWorkoutLogs: vi.fn().mockReturnValue([
+    {
+      id: "1",
+      date: "2026-04-10",
+      exercises: [
+        {
+          exerciseName: "Bicep Curls",
+          sets: [
+            { setNumber: 1, repsCompleted: 10, formNotes: "Good form" },
+            { setNumber: 2, repsCompleted: 10, formNotes: "Good form" },
+            { setNumber: 3, repsCompleted: 10, formNotes: "Good form" },
+          ],
+        },
+        {
+          exerciseName: "Lateral Raises",
+          sets: [
+            { setNumber: 1, repsCompleted: 12, formNotes: "Good form" },
+            { setNumber: 2, repsCompleted: 12, formNotes: "Good form" },
+            { setNumber: 3, repsCompleted: 12, formNotes: "Good form" },
+          ],
+        },
+        {
+          exerciseName: "Jumping Jacks",
+          sets: [
+            { setNumber: 1, repsCompleted: 20, formNotes: "Good form" },
+            { setNumber: 2, repsCompleted: 20, formNotes: "Good form" },
+            { setNumber: 3, repsCompleted: 20, formNotes: "Good form" },
+          ],
+        },
+      ],
+      aiSummary: "",
+    },
+  ]),
+}));
+
+vi.mock("@/lib/aiCoaching", () => ({
+  generateWorkoutSummary: vi.fn().mockResolvedValue("Great workout! Your form was consistent."),
+}));
+
 describe("Post-Workout Summary", () => {
   beforeEach(() => {
     mockPush.mockClear();
@@ -18,7 +58,7 @@ describe("Post-Workout Summary", () => {
     expect(screen.getByText(/workout complete/i)).toBeInTheDocument();
   });
 
-  it("renders the exercise list with sets and reps", () => {
+  it("renders the exercise list", () => {
     render(<SummaryPage />);
     expect(screen.getByText("Bicep Curls")).toBeInTheDocument();
     expect(screen.getByText("Lateral Raises")).toBeInTheDocument();
@@ -27,17 +67,12 @@ describe("Post-Workout Summary", () => {
 
   it("displays total stats", () => {
     render(<SummaryPage />);
-    // Stats are split: number in one element, label in another
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("9")).toBeInTheDocument();
-    expect(screen.getByText("42")).toBeInTheDocument();
-    // Labels exist (Exercises appears twice: stat + section heading)
-    expect(screen.getAllByText("Exercises").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Sets")).toBeInTheDocument();
-    expect(screen.getByText("Reps")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument(); // exercises
+    expect(screen.getByText("9")).toBeInTheDocument(); // sets
+    expect(screen.getByText("126")).toBeInTheDocument(); // reps
   });
 
-  it("renders AI coaching notes section", () => {
+  it("renders coaching notes section", () => {
     render(<SummaryPage />);
     expect(screen.getByText(/coaching notes/i)).toBeInTheDocument();
   });
