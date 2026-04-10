@@ -9,7 +9,6 @@ const RATE_LIMIT_MS = 5000;
 function bicepCurlRules(): FormRule[] {
   return [
     {
-      // Elbows drifting: check if elbow x differs significantly from shoulder x
       check(landmarks) {
         const leftShoulder = landmarks[11];
         const rightShoulder = landmarks[12];
@@ -20,7 +19,31 @@ function bicepCurlRules(): FormRule[] {
         const rightDrift = Math.abs(rightElbow.x - rightShoulder.x);
 
         if (leftDrift > 0.08 || rightDrift > 0.08) {
-          return "Keep your elbows tucked";
+          return "Keep your elbows tucked to your sides";
+        }
+        return null;
+      },
+    },
+    {
+      check(landmarks) {
+        const leftShoulder = landmarks[11];
+        const rightShoulder = landmarks[12];
+        const leftElbow = landmarks[13];
+        const rightElbow = landmarks[14];
+
+        if (leftElbow.y < leftShoulder.y - 0.02 || rightElbow.y < rightShoulder.y - 0.02) {
+          return "Slow down, don't swing the weight";
+        }
+        return null;
+      },
+    },
+    {
+      check(landmarks) {
+        const leftAngle = getElbowAngle(landmarks, "left");
+        const rightAngle = getElbowAngle(landmarks, "right");
+
+        if (Math.abs(leftAngle - rightAngle) > 30) {
+          return "Keep both arms moving together";
         }
         return null;
       },
@@ -31,14 +54,12 @@ function bicepCurlRules(): FormRule[] {
 function lateralRaiseRules(): FormRule[] {
   return [
     {
-      // Arms should be nearly straight during raise
       check(landmarks) {
         const shoulderAngle =
           (getShoulderAbductionAngle(landmarks, "left") +
             getShoulderAbductionAngle(landmarks, "right")) /
           2;
 
-        // Only check when arms are raised (abduction > 40°)
         if (shoulderAngle < 40) return null;
 
         const leftElbow = getElbowAngle(landmarks, "left");
@@ -46,7 +67,31 @@ function lateralRaiseRules(): FormRule[] {
         const avgElbow = (leftElbow + rightElbow) / 2;
 
         if (avgElbow < 150) {
-          return "Straighten your arms";
+          return "Straighten your arms more";
+        }
+        return null;
+      },
+    },
+    {
+      check(landmarks) {
+        const shoulderAngle =
+          (getShoulderAbductionAngle(landmarks, "left") +
+            getShoulderAbductionAngle(landmarks, "right")) /
+          2;
+
+        if (shoulderAngle > 110) {
+          return "Don't raise above shoulder height";
+        }
+        return null;
+      },
+    },
+    {
+      check(landmarks) {
+        const leftAngle = getShoulderAbductionAngle(landmarks, "left");
+        const rightAngle = getShoulderAbductionAngle(landmarks, "right");
+
+        if (Math.abs(leftAngle - rightAngle) > 20) {
+          return "Raise both arms evenly";
         }
         return null;
       },
@@ -57,7 +102,6 @@ function lateralRaiseRules(): FormRule[] {
 function jumpingJackRules(): FormRule[] {
   return [
     {
-      // Arms should be symmetrical
       check(landmarks) {
         const leftAngle = getShoulderAbductionAngle(landmarks, "left");
         const rightAngle = getShoulderAbductionAngle(landmarks, "right");
