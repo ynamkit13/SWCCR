@@ -257,9 +257,14 @@ export default function WorkoutSession() {
             <p className="text-muted text-sm">
               Next: {nextExercise} — Set {nextSet}
             </p>
-            <Button variant="secondary" onClick={() => setRestSeconds((s) => s + 60)}>
-              +1 min
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="secondary" onClick={() => setRestSeconds((s) => s + 60)}>
+                +1 min
+              </Button>
+              <Button onClick={advanceToNextSet} aria-label="Start now">
+                Start Now
+              </Button>
+            </div>
           </>
         ) : (
           <>
