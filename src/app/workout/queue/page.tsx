@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { warmUpSpeech } from "@/lib/speech";
 
 type Exercise = {
   id: string;
@@ -230,7 +231,7 @@ export default function QueuePage() {
         <Button variant="secondary" onClick={() => router.back()} className="flex-1">
           Back
         </Button>
-        <Button onClick={() => router.push("/workout/session")} className="flex-1 text-lg py-4">Start Workout</Button>
+        <Button onClick={() => { warmUpSpeech(); router.push("/workout/session"); }} className="flex-1 text-lg py-4">Start Workout</Button>
       </div>
     </div>
   );

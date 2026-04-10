@@ -1,3 +1,19 @@
+let warmedUp = false;
+
+/**
+ * Warm up the speech engine with a silent utterance.
+ * Must be called from a user gesture (click handler) to unlock
+ * speechSynthesis in browsers that require user activation.
+ */
+export function warmUpSpeech(): void {
+  if (typeof window === "undefined" || !window.speechSynthesis || warmedUp) return;
+
+  const utterance = new SpeechSynthesisUtterance("");
+  utterance.volume = 0;
+  window.speechSynthesis.speak(utterance);
+  warmedUp = true;
+}
+
 /**
  * Speak a message using Web Speech API.
  * Respects mute state — caller should check before calling.
