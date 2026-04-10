@@ -154,11 +154,13 @@ blocking the camera view.
 
 ## Tech Stack
 - **Language:** TypeScript
-- **Framework:** Expo (React Native) + MediaPipe (pose detection) 
-  + expo-speech (voice feedback)
-- **Database:** AsyncStorage (local, on-device — workout logs 
-  and onboarding data). Migrates to Supabase in v2.
-- **Hosting:** Claude recommends after completion of app
+- **Framework:** Next.js (React) + MediaPipe JS (pose detection 
+  via WASM, in-browser) + Web Speech API (voice feedback)
+- **Styling:** Tailwind CSS
+- **Camera:** WebRTC (getUserMedia) for browser camera access
+- **Database:** localStorage / IndexedDB (local, on-device — 
+  workout logs and onboarding data). Migrates to Supabase in v2.
+- **Hosting:** Vercel (recommended for Next.js)
 - **Auth:** None for MVP — Clerk in v2
 - **Already set up:** Anthropic API key available — open to 
   Claude, OpenAI, or Gemini; Claude Code recommends best fit 
@@ -168,15 +170,14 @@ blocking the camera view.
 
 ## Other Engineering Requirements
 - All pose detection and camera processing must run fully 
-  on-device — no camera data, frames, or images are ever 
+  in-browser — no camera data, frames, or images are ever 
   sent to a server
 - MediaPipe locks onto the first person detected at session 
   start — all other people in frame are ignored throughout 
   the session
 - Audio ducking must lower background music volume during 
   voice feedback and restore it immediately after
-- Lock to portrait mode only for MVP
-- iOS only for MVP
+- Web-first (Chrome primary target), mobile app later
 
 ---
 
