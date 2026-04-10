@@ -40,7 +40,7 @@ export default function WorkoutSession() {
   const formAnalyserRef = useRef<FormAnalyser | null>(null);
   const animFrameRef = useRef<number>(0);
 
-  const [exercises] = useState<Exercise[]>(() => {
+  const [exercises, setExercises] = useState<Exercise[]>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("recommended_exercises");
       if (saved) return JSON.parse(saved);
@@ -60,6 +60,7 @@ export default function WorkoutSession() {
   const [coachingNote, setCoachingNote] = useState<string | null>(null);
   const [coachingLoading, setCoachingLoading] = useState(false);
   const [containerSize, setContainerSize] = useState({ width: 1280, height: 720 });
+  const [showEditPanel, setShowEditPanel] = useState(false);
 
   // Track results for logging
   const sessionResultsRef = useRef<{
@@ -336,7 +337,19 @@ export default function WorkoutSession() {
               Set {currentSet} of {exercise.sets}
             </p>
           </div>
-          <MuteButton muted={muted} onToggle={() => setMuted(!muted)} />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowEditPanel(true)}
+              aria-label="Edit workout"
+              className="bg-white rounded-full w-11 h-11 flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors cursor-pointer"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5f6368" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+            <MuteButton muted={muted} onToggle={() => setMuted(!muted)} />
+          </div>
         </div>
 
         {/* Middle: form feedback + pose status */}
@@ -366,6 +379,118 @@ export default function WorkoutSession() {
           </Button>
         </div>
       </div>
+
+      {/* Edit Panel Overlay */}
+      {showEditPanel && (
+        <div className="absolute inset-0 z-20 bg-background/95 overflow-y-auto p-6">
+          <div className="max-w-md mx-auto flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">Edit Workout</h2>
+              <button
+                onClick={() => setShowEditPanel(false)}
+                className="text-muted hover:text-foreground text-2xl cursor-pointer"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {exercises.map((ex, i) => (
+              <div key={ex.name} className="bg-surface rounded-2xl shadow-sm p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">{ex.name}</h3>
+                  {i === exerciseIndex && (
+                    <span className="text-xs text-primary font-medium">Current</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label htmlFor={`edit-sets-${i}`} className="block text-xs text-muted mb-1">Sets</label>
+                    <input
+                      id={`edit-sets-${i}`}
+                      type="number"
+                      min={1}
+                      value={ex.sets}
+                      onChange={(e) => {
+                        const updated = [...exercises];
+                        updated[i] = { ...updated[i], sets: Number(e.target.value) };
+                        setExercises(updated);
+                      }}
+                      className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`edit-reps-${i}`} className="block text-xs text-muted mb-1">Reps</label>
+                    <input
+                      id={`edit-reps-${i}`}
+                      type="number"
+                      min={1}
+                      value={ex.reps}
+                      onChange={(e) => {
+                        const updated = [...exercises];
+                        updated[i] = { ...updated[i], reps: Number(e.target.value) };
+                        setExercises(updated);
+                      }}
+                      className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`edit-rest-${i}`} className="block text-xs text-muted mb-1">Rest (s)</label>
+                    <input
+                      id={`edit-rest-${i}`}
+                      type="number"
+                      min={10}
+                      step={5}
+                      value={ex.rest}
+                      onChange={(e) => {
+                        const updated = [...exercises];
+                        updated[i] = { ...updated[i], rest: Number(e.target.value) };
+                        setExercises(updated);
+                      }}
+                      className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setShowEditPanel(false)}
+                className="flex-1"
+              >
+                Resume
+              </Button>
+              <Button
+                onClick={() => {
+                  // Save what we have and end workout
+                  const results = sessionResultsRef.current;
+                  saveWorkoutLog({
+                    id: Date.now().toString(),
+                    date: new Date().toISOString().split("T")[0],
+                    exercises: results.exercises
+                      .filter((ex) => ex.sets.length > 0)
+                      .map((ex) => ({
+                        exerciseName: ex.name,
+                        sets: ex.sets.map((s) => ({
+                          setNumber: s.setNumber,
+                          repsCompleted: s.repsCompleted,
+                          formNotes: s.formIssues.join(", ") || "Good form",
+                        })),
+                      })),
+                    aiSummary: "",
+                  });
+                  router.push("/workout/summary");
+                }}
+                className="flex-1 bg-error hover:bg-red-600 text-white"
+              >
+                End Workout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
