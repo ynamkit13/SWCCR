@@ -106,7 +106,7 @@ export default function RecommendationsPage() {
           Your Recommended Plan
         </h1>
         <p className="text-muted text-sm">
-          These are AI-recommended starting values. Adjust anything that doesn't
+          These are recommended starting values. Adjust anything that doesn't
           feel right.
         </p>
       </div>
