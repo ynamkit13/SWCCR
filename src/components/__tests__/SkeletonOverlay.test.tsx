@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { SkeletonOverlay } from "../SkeletonOverlay";
 
-// Mock canvas context
 const mockCtx = {
   clearRect: vi.fn(),
   beginPath: vi.fn(),
@@ -33,8 +32,14 @@ describe("SkeletonOverlay", () => {
 
   it("calls drawing functions when landmarks are provided", () => {
     render(<SkeletonOverlay landmarks={mockLandmarks} width={640} height={480} />);
-    // Should draw circles for landmarks and lines for connections
     expect(mockCtx.arc).toHaveBeenCalled();
     expect(mockCtx.moveTo).toHaveBeenCalled();
+  });
+
+  it("canvas uses provided width and height attributes", () => {
+    render(<SkeletonOverlay landmarks={null} width={800} height={600} />);
+    const canvas = screen.getByTestId("skeleton-canvas") as HTMLCanvasElement;
+    expect(canvas.width).toBe(800);
+    expect(canvas.height).toBe(600);
   });
 });

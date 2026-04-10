@@ -34,6 +34,7 @@ type SetResult = {
 export default function WorkoutSession() {
   const router = useRouter();
   const webcamRef = useRef<WebcamHandle>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const detectorRef = useRef<PoseDetector | null>(null);
   const repCounterRef = useRef<RepCounter | null>(null);
   const formAnalyserRef = useRef<FormAnalyser | null>(null);
@@ -58,6 +59,7 @@ export default function WorkoutSession() {
   const [restSeconds, setRestSeconds] = useState(0);
   const [coachingNote, setCoachingNote] = useState<string | null>(null);
   const [coachingLoading, setCoachingLoading] = useState(false);
+  const [containerSize, setContainerSize] = useState({ width: 1280, height: 720 });
 
   // Track results for logging
   const sessionResultsRef = useRef<{
@@ -69,6 +71,18 @@ export default function WorkoutSession() {
   const currentFormIssuesRef = useRef<string[]>([]);
 
   const exercise = exercises[exerciseIndex];
+
+  // Track container size for skeleton overlay
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setContainerSize({ width: Math.round(width), height: Math.round(height) });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Initialize pose detector
   useEffect(() => {
@@ -300,15 +314,15 @@ export default function WorkoutSession() {
 
   // Workout phase
   return (
-    <div className="relative w-full h-[calc(100vh-3rem)] flex flex-col">
+    <div ref={containerRef} className="relative w-full h-[calc(100vh-3rem)] flex flex-col">
       {/* Camera feed */}
       <Webcam ref={webcamRef} className="absolute inset-0 w-full h-full" />
 
-      {/* Skeleton overlay */}
+      {/* Skeleton overlay — dimensions match actual container */}
       <SkeletonOverlay
         landmarks={landmarks}
-        width={1280}
-        height={720}
+        width={containerSize.width}
+        height={containerSize.height}
         className="absolute inset-0 w-full h-full"
       />
 
