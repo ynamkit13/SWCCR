@@ -146,7 +146,9 @@ export default function WorkoutSession() {
                 setFeedback(issues[0]);
                 currentFormIssuesRef.current.push(...issues);
                 if (!muted) {
-                  speak(issues[0]);
+                  for (const issue of issues) {
+                    speak(issue);
+                  }
                 }
                 // Clear feedback after 3 seconds
                 setTimeout(() => setFeedback(null), 3000);
