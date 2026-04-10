@@ -258,72 +258,19 @@ export default function WorkoutSession() {
     setPhase("workout");
   }
 
-  // Rest phase
-  if (phase === "rest") {
-    const isLastSet = currentSet >= exercise.sets;
-    const nextExercise = isLastSet
-      ? exercises[exerciseIndex + 1]?.name ?? exercise.name
-      : exercise.name;
-    const nextSet = isLastSet ? 1 : currentSet + 1;
+  const restNextExercise = phase === "rest"
+    ? (currentSet >= exercise.sets
+        ? exercises[exerciseIndex + 1]?.name ?? exercise.name
+        : exercise.name)
+    : "";
+  const restNextSet = phase === "rest"
+    ? (currentSet >= exercise.sets ? 1 : currentSet + 1)
+    : 0;
 
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8">
-        {restSeconds > 0 ? (
-          <>
-            <p className="text-sm text-muted font-medium">Rest</p>
-            <div className="text-center">
-              <p className="text-8xl font-bold tracking-tight">{restSeconds}</p>
-              <p className="text-muted text-sm mt-2">seconds remaining</p>
-            </div>
-            <p className="text-muted text-sm">
-              Next: {nextExercise} — Set {nextSet}
-            </p>
-            <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setRestSeconds((s) => s + 60)}>
-                +1 min
-              </Button>
-              <Button onClick={advanceToNextSet} aria-label="Start now">
-                Start Now
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <h1 className="text-2xl font-bold tracking-tight text-center">
-              Ready for your next set?
-            </h1>
-            <p className="text-muted">
-              Next: {nextExercise} — Set {nextSet}
-            </p>
-            <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setRestSeconds(60)}>
-                +1 min
-              </Button>
-              <Button onClick={advanceToNextSet} aria-label="Skip rest">
-                Start
-              </Button>
-            </div>
-          </>
-        )}
-
-        {coachingLoading && (
-          <p className="text-sm text-muted animate-pulse">Getting coaching feedback...</p>
-        )}
-        {coachingNote && (
-          <div className="bg-surface rounded-2xl shadow-sm p-4 w-full max-w-md">
-            <h3 className="font-semibold text-sm mb-1">Coaching Note</h3>
-            <p className="text-sm text-muted">{coachingNote}</p>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Workout phase — side-by-side layout
   return (
     <div className="flex h-full gap-0">
-      {/* Camera section — 3/4 width */}
-      <div ref={containerRef} data-testid="camera-section" className="relative w-3/4 h-full bg-black">
+      {/* Camera section — 3/4 width, always mounted to keep stream alive */}
+      <div ref={containerRef} data-testid="camera-section" className={`relative w-3/4 h-full bg-black ${phase === "rest" ? "invisible" : ""}`}>
         <Webcam ref={webcamRef} className="absolute inset-0 w-full h-full" />
         <SkeletonOverlay
           landmarks={landmarks}
@@ -344,7 +291,7 @@ export default function WorkoutSession() {
             </div>
           </div>
         )}
-        {poseReady && !landmarks && (
+        {poseReady && !landmarks && phase === "workout" && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="bg-black/50 backdrop-blur-sm rounded-xl px-4 py-2">
               <p className="text-white/70 text-sm">Stand in view of the camera</p>
@@ -353,8 +300,61 @@ export default function WorkoutSession() {
         )}
       </div>
 
+      {/* Rest phase overlay — replaces side panel area */}
+      {phase === "rest" && (
+        <div className="absolute inset-0 z-10 bg-background flex flex-col items-center justify-center gap-8">
+          {restSeconds > 0 ? (
+            <>
+              <p className="text-sm text-muted font-medium">Rest</p>
+              <div className="text-center">
+                <p className="text-8xl font-bold tracking-tight">{restSeconds}</p>
+                <p className="text-muted text-sm mt-2">seconds remaining</p>
+              </div>
+              <p className="text-muted text-sm">
+                Next: {restNextExercise} — Set {restNextSet}
+              </p>
+              <div className="flex gap-3">
+                <Button variant="secondary" onClick={() => setRestSeconds((s) => s + 60)}>
+                  +1 min
+                </Button>
+                <Button onClick={advanceToNextSet} aria-label="Start now">
+                  Start Now
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold tracking-tight text-center">
+                Ready for your next set?
+              </h1>
+              <p className="text-muted">
+                Next: {restNextExercise} — Set {restNextSet}
+              </p>
+              <div className="flex gap-3">
+                <Button variant="secondary" onClick={() => setRestSeconds(60)}>
+                  +1 min
+                </Button>
+                <Button onClick={advanceToNextSet} aria-label="Skip rest">
+                  Start
+                </Button>
+              </div>
+            </>
+          )}
+
+          {coachingLoading && (
+            <p className="text-sm text-muted animate-pulse">Getting coaching feedback...</p>
+          )}
+          {coachingNote && (
+            <div className="bg-surface rounded-2xl shadow-sm p-4 w-full max-w-md">
+              <h3 className="font-semibold text-sm mb-1">Coaching Note</h3>
+              <p className="text-sm text-muted">{coachingNote}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Side panel — 1/4 width */}
-      <div data-testid="side-panel" className="w-1/4 h-full bg-surface flex flex-col justify-between p-5 border-l border-muted-light">
+      <div data-testid="side-panel" className={`w-1/4 h-full bg-surface flex flex-col justify-between p-5 border-l border-muted-light ${phase === "rest" ? "invisible" : ""}`}>
         {/* Exercise info */}
         <div className="flex flex-col gap-6">
           <div>
