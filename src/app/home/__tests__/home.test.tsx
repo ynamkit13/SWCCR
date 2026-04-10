@@ -8,6 +8,11 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+// Mock storage
+vi.mock("@/lib/storage", () => ({
+  getWorkoutLogs: vi.fn().mockReturnValue([]),
+}));
+
 describe("Home Screen", () => {
   beforeEach(() => {
     mockPush.mockClear();
@@ -42,9 +47,8 @@ describe("Home Screen", () => {
     expect(screen.getByText(/no workouts yet/i)).toBeInTheDocument();
   });
 
-  it("renders mock workout history entries", () => {
+  it("shows empty state with default (no logs in storage)", () => {
     render(<HomePage />);
-    // Mock entries should show dates
-    expect(screen.getAllByText(/2026/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/no workouts yet/i)).toBeInTheDocument();
   });
 });

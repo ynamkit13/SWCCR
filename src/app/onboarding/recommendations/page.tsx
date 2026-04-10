@@ -1,19 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { saveUserProfile } from "@/lib/storage";
 
-const defaultExercises = [
-  { name: "Bicep Curls", sets: 3, reps: 10, rest: 60 },
-  { name: "Lateral Raises", sets: 3, reps: 12, rest: 45 },
-  { name: "Jumping Jacks", sets: 3, reps: 20, rest: 30 },
-];
+type Exercise = { name: string; sets: number; reps: number; rest: number };
+
+function getRecommendations(answers: { experience: string; frequency: string; goal: string } | null): Exercise[] {
+  if (!answers) {
+    return [
+      { name: "Bicep Curls", sets: 3, reps: 10, rest: 60 },
+      { name: "Lateral Raises", sets: 3, reps: 12, rest: 45 },
+      { name: "Jumping Jacks", sets: 3, reps: 20, rest: 30 },
+    ];
+  }
+
+  const isNew = answers.experience === "Never";
+  const isAdvanced = answers.experience === "1+ years";
+  const wantsStrength = answers.goal === "Build strength";
+
+  const baseSets = isNew ? 2 : isAdvanced ? 4 : 3;
+  const baseReps = wantsStrength ? (isNew ? 8 : 12) : (isNew ? 10 : 15);
+  const baseRest = isNew ? 90 : isAdvanced ? 45 : 60;
+
+  return [
+    { name: "Bicep Curls", sets: baseSets, reps: baseReps, rest: baseRest },
+    { name: "Lateral Raises", sets: baseSets, reps: baseReps + 2, rest: baseRest - 15 },
+    { name: "Jumping Jacks", sets: baseSets, reps: baseReps + 10, rest: Math.max(30, baseRest - 30) },
+  ];
+}
 
 export default function RecommendationsPage() {
   const router = useRouter();
-  const [exercises, setExercises] = useState(defaultExercises);
+  const [exercises, setExercises] = useState<Exercise[]>([
+    { name: "Bicep Curls", sets: 3, reps: 10, rest: 60 },
+    { name: "Lateral Raises", sets: 3, reps: 12, rest: 45 },
+    { name: "Jumping Jacks", sets: 3, reps: 20, rest: 30 },
+  ]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const raw = localStorage.getItem("quiz_answers");
+      if (raw) {
+        const answers = JSON.parse(raw);
+        setExercises(getRecommendations(answers));
+      }
+    }
+  }, []);
 
   function updateExercise(
     index: number,
@@ -23,6 +58,45 @@ export default function RecommendationsPage() {
     const updated = [...exercises];
     updated[index] = { ...updated[index], [field]: value };
     setExercises(updated);
+  }
+
+  function handleConfirm() {
+    // Save profile with defaults from first exercise
+    const quizRaw = typeof window !== "undefined" ? localStorage.getItem("quiz_answers") : null;
+    const quiz = quizRaw ? JSON.parse(quizRaw) : {};
+
+    const fitnessLevelMap: Record<string, string> = {
+      "Never": "never",
+      "Under 6 months": "beginner",
+      "1+ years": "intermediate",
+    };
+    const goalMap: Record<string, string> = {
+      "Build strength": "strength",
+      "Lose weight": "weight_loss",
+      "Stay active": "active",
+    };
+    const freqMap: Record<string, number> = {
+      "1–2": 2,
+      "3–4": 4,
+      "5+": 6,
+    };
+
+    saveUserProfile({
+      fitnessLevel: fitnessLevelMap[quiz.experience] ?? "beginner",
+      weeklyFrequency: freqMap[quiz.frequency] ?? 3,
+      goal: goalMap[quiz.goal] ?? "active",
+      defaultSets: exercises[0].sets,
+      defaultReps: exercises[0].reps,
+      defaultRestDuration: exercises[0].rest,
+      onboardingComplete: true,
+    });
+
+    // Save recommended exercises for the queue
+    if (typeof window !== "undefined") {
+      localStorage.setItem("recommended_exercises", JSON.stringify(exercises));
+    }
+
+    router.push("/home");
   }
 
   return (
@@ -103,7 +177,7 @@ export default function RecommendationsPage() {
       </div>
 
       <Button
-        onClick={() => router.push("/home")}
+        onClick={handleConfirm}
         className="w-full max-w-md text-lg py-4"
       >
         Confirm

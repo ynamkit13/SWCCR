@@ -1,10 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { getUserProfile } from "@/lib/storage";
 
 export default function WelcomePage() {
   const router = useRouter();
+
+  useEffect(() => {
+    const profile = getUserProfile();
+    if (profile?.onboardingComplete) {
+      router.replace("/home");
+    }
+  }, [router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8 text-center">
