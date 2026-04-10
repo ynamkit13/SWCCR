@@ -44,19 +44,23 @@ Fully client-side web app. No backend server in the MVP. See [docs/architecture.
 
 ## Design, Style, UX Guides
 
-- **Theme:** Dark theme with neon green accents — think Nike Training Club meets Apple Fitness+
-- **Aesthetic:** Clean, athletic, confidence-inspiring. The workout screen should feel like a heads-up display, not a cluttered UI.
+- **Theme:** Light, warm, and approachable — think ClassPass meets a modern wellness dashboard
+- **Aesthetic:** Clean, friendly, confidence-inspiring. Airy layouts with generous spacing. The app should feel inviting, not intimidating.
 - **Styling:** Tailwind CSS utility-first. No custom CSS unless absolutely necessary.
+- **Design reference:** See `.claude/design-reference.png` for the visual direction.
 - **Camera feed** dominates the workout screen. Skeletal overlay sits on top.
 - **Rep counter** must be bold, high-contrast, readable at a glance — always showing progress toward the goal ("3 more to go!").
 - **Popups and prompts** are minimal and non-intrusive — the workout should never feel interrupted.
 - **On-screen text feedback** appears briefly and fades, never blocking the camera view.
 - **Rest timer** must be bold and readable — large countdown numbers.
-- **Typography:** Clean sans-serif. High contrast text on dark backgrounds.
+- **Cards:** Rounded corners, soft shadows, clean image containers.
+- **Typography:** Clean sans-serif. Dark text on light backgrounds. Generous line height.
 - **Colour palette:**
-  - Background: near-black (`#0a0a0a` or similar)
-  - Primary accent: neon green (`#39FF14` or similar)
-  - Secondary: muted greys for inactive states
+  - Background: white / light cream (`#FFFFFF`, `#FAFAFA`)
+  - Primary accent: green (`#4CAF50` or similar) — buttons, active states, tags
+  - Secondary accent: soft purple/lavender (`#E8DEF8` or similar) — sidebar, surfaces, subtle highlights
+  - Badges/labels: warm coral/orange gradient — difficulty levels, categories
+  - Text: dark grey/near-black (`#1A1A1A`) for body, medium grey for secondary text
   - Error/warning: red for form corrections
   - Success: green for completed sets/reps
 
