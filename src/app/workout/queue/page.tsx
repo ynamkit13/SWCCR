@@ -143,7 +143,22 @@ function SortableExercise({
 
 export default function QueuePage() {
   const router = useRouter();
-  const [queue, setQueue] = useState(defaultQueue);
+  const [queue, setQueue] = useState<Exercise[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("recommended_exercises");
+      if (saved) {
+        const exercises = JSON.parse(saved);
+        return exercises.map((e: { name: string; sets: number; reps: number; rest: number }) => ({
+          id: e.name.toLowerCase().replace(/\s+/g, "-"),
+          name: e.name,
+          sets: e.sets,
+          reps: e.reps,
+          rest: e.rest,
+        }));
+      }
+    }
+    return defaultQueue;
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor),
