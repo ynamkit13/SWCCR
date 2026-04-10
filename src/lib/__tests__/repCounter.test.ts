@@ -1,0 +1,121 @@
+import { describe, it, expect, beforeEach } from "vitest";
+import { RepCounter } from "../repCounter";
+import { Point } from "../angles";
+
+function mockLandmarks(overrides: Record<number, { x: number; y: number }>): Point[] {
+  const landmarks: Point[] = Array.from({ length: 33 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
+  for (const [index, value] of Object.entries(overrides)) {
+    landmarks[Number(index)] = { ...value, z: 0 };
+  }
+  return landmarks;
+}
+
+// Bicep curl: elbow angle ~160° (down) → ~40° (up) → ~160° (down) = 1 rep
+function bicepCurlDown(): Point[] {
+  return mockLandmarks({
+    11: { x: 0.4, y: 0.3 }, // left shoulder
+    12: { x: 0.6, y: 0.3 }, // right shoulder
+    13: { x: 0.4, y: 0.5 }, // left elbow
+    14: { x: 0.6, y: 0.5 }, // right elbow
+    15: { x: 0.4, y: 0.7 }, // left wrist (arm straight = ~180°)
+    16: { x: 0.6, y: 0.7 }, // right wrist
+  });
+}
+
+function bicepCurlUp(): Point[] {
+  return mockLandmarks({
+    11: { x: 0.4, y: 0.3 }, // left shoulder
+    12: { x: 0.6, y: 0.3 },
+    13: { x: 0.4, y: 0.5 }, // left elbow
+    14: { x: 0.6, y: 0.5 },
+    15: { x: 0.38, y: 0.32 }, // left wrist (curled up = ~30°)
+    16: { x: 0.62, y: 0.32 },
+  });
+}
+
+// Lateral raise: shoulder abduction ~0° (down) → ~90° (up) = 1 rep
+function lateralRaiseDown(): Point[] {
+  return mockLandmarks({
+    11: { x: 0.4, y: 0.3 },
+    12: { x: 0.6, y: 0.3 },
+    13: { x: 0.4, y: 0.5 }, // elbow below shoulder (arm at side)
+    14: { x: 0.6, y: 0.5 },
+    23: { x: 0.4, y: 0.6 }, // left hip
+    24: { x: 0.6, y: 0.6 },
+  });
+}
+
+function lateralRaiseUp(): Point[] {
+  return mockLandmarks({
+    11: { x: 0.4, y: 0.3 },
+    12: { x: 0.6, y: 0.3 },
+    13: { x: 0.2, y: 0.3 }, // elbow out to side (arm raised)
+    14: { x: 0.8, y: 0.3 },
+    23: { x: 0.4, y: 0.6 },
+    24: { x: 0.6, y: 0.6 },
+  });
+}
+
+describe("RepCounter", () => {
+  describe("Bicep Curls", () => {
+    let counter: RepCounter;
+
+    beforeEach(() => {
+      counter = new RepCounter("Bicep Curls");
+    });
+
+    it("starts at 0 reps", () => {
+      expect(counter.count).toBe(0);
+    });
+
+    it("detects a bicep curl rep (down → up → down)", () => {
+      // Start down
+      counter.update(bicepCurlDown());
+      counter.update(bicepCurlDown());
+      // Go up
+      counter.update(bicepCurlUp());
+      counter.update(bicepCurlUp());
+      // Come back down
+      counter.update(bicepCurlDown());
+      counter.update(bicepCurlDown());
+
+      expect(counter.count).toBe(1);
+    });
+
+    it("does not count a partial movement", () => {
+      counter.update(bicepCurlDown());
+      counter.update(bicepCurlDown());
+      // Only go halfway, stay down
+      counter.update(bicepCurlDown());
+
+      expect(counter.count).toBe(0);
+    });
+
+    it("resets count", () => {
+      counter.update(bicepCurlDown());
+      counter.update(bicepCurlUp());
+      counter.update(bicepCurlDown());
+      counter.reset();
+      expect(counter.count).toBe(0);
+    });
+  });
+
+  describe("Lateral Raises", () => {
+    let counter: RepCounter;
+
+    beforeEach(() => {
+      counter = new RepCounter("Lateral Raises");
+    });
+
+    it("detects a lateral raise rep (down → up → down)", () => {
+      counter.update(lateralRaiseDown());
+      counter.update(lateralRaiseDown());
+      counter.update(lateralRaiseUp());
+      counter.update(lateralRaiseUp());
+      counter.update(lateralRaiseDown());
+      counter.update(lateralRaiseDown());
+
+      expect(counter.count).toBe(1);
+    });
+  });
+});
