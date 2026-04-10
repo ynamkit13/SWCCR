@@ -42,4 +42,15 @@ describe("SkeletonOverlay", () => {
     expect(canvas.width).toBe(800);
     expect(canvas.height).toBe(600);
   });
+
+  it("mirrors x-coordinates for selfie mode", () => {
+    mockCtx.arc.mockClear();
+    // Landmark at x=0.2 on a 640px canvas should draw at (1-0.2)*640 = 512
+    const singleLandmark = Array.from({ length: 33 }, () => ({ x: 0.2, y: 0.5, z: 0 }));
+    render(<SkeletonOverlay landmarks={singleLandmark} width={640} height={480} mirrored />);
+    // Check that arc was called with mirrored x
+    const arcCalls = mockCtx.arc.mock.calls;
+    const firstBodyLandmarkCall = arcCalls.find((call: number[]) => Math.abs(call[0] - 512) < 1);
+    expect(firstBodyLandmarkCall).toBeDefined();
+  });
 });

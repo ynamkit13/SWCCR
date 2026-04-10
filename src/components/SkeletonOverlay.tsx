@@ -19,6 +19,7 @@ type SkeletonOverlayProps = {
   width: number;
   height: number;
   badJoints?: number[]; // indices of joints with form issues (drawn in red)
+  mirrored?: boolean; // mirror x-coordinates to match selfie camera
   className?: string;
 };
 
@@ -27,6 +28,7 @@ export function SkeletonOverlay({
   width,
   height,
   badJoints = [],
+  mirrored = false,
   className = "",
 }: SkeletonOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,6 +44,10 @@ export function SkeletonOverlay({
 
     if (!landmarks || landmarks.length === 0) return;
 
+    // Helper to convert landmark coordinates, with optional mirroring
+    const toX = (x: number) => (mirrored ? (1 - x) * width : x * width);
+    const toY = (y: number) => y * height;
+
     // Draw connections (bones)
     ctx.strokeStyle = "#4CAF50";
     ctx.lineWidth = 3;
@@ -54,8 +60,8 @@ export function SkeletonOverlay({
       ctx.strokeStyle = isBad ? "#ef4444" : "#4CAF50";
 
       ctx.beginPath();
-      ctx.moveTo(start.x * width, start.y * height);
-      ctx.lineTo(end.x * width, end.y * height);
+      ctx.moveTo(toX(start.x), toY(start.y));
+      ctx.lineTo(toX(end.x), toY(end.y));
       ctx.stroke();
     }
 
@@ -69,10 +75,10 @@ export function SkeletonOverlay({
       ctx.fillStyle = isBad ? "#ef4444" : "#4CAF50";
 
       ctx.beginPath();
-      ctx.arc(lm.x * width, lm.y * height, 5, 0, 2 * Math.PI);
+      ctx.arc(toX(lm.x), toY(lm.y), 5, 0, 2 * Math.PI);
       ctx.fill();
     }
-  }, [landmarks, width, height, badJoints]);
+  }, [landmarks, width, height, badJoints, mirrored]);
 
   return (
     <canvas

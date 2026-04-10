@@ -324,6 +324,7 @@ export default function WorkoutSession() {
         landmarks={landmarks}
         width={containerSize.width}
         height={containerSize.height}
+        mirrored
         className="absolute inset-0 w-full h-full"
       />
 
