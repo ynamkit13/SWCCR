@@ -45,13 +45,10 @@ describe("Pre-Workout Queue Customisation", () => {
     expect(screen.queryByText("Bicep Curls")).not.toBeInTheDocument();
   });
 
-  it("allows reordering exercises with move up/down", async () => {
+  it("renders drag handles for reordering", () => {
     render(<QueuePage />);
-    const moveDownButtons = screen.getAllByRole("button", { name: /move down/i });
-    await userEvent.click(moveDownButtons[0]);
-    const exerciseNames = screen.getAllByTestId("exercise-name").map((el) => el.textContent);
-    expect(exerciseNames[0]).toBe("Lateral Raises");
-    expect(exerciseNames[1]).toBe("Bicep Curls");
+    const dragHandles = screen.getAllByLabelText(/drag to reorder/i);
+    expect(dragHandles).toHaveLength(3);
   });
 
   it("renders a Start Workout button", () => {

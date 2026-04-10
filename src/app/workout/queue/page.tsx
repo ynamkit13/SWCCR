@@ -2,18 +2,155 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 
-const defaultQueue = [
-  { name: "Bicep Curls", sets: 3, reps: 10, rest: 60 },
-  { name: "Lateral Raises", sets: 3, reps: 12, rest: 45 },
-  { name: "Jumping Jacks", sets: 3, reps: 20, rest: 30 },
+type Exercise = {
+  id: string;
+  name: string;
+  sets: number;
+  reps: number;
+  rest: number;
+};
+
+const defaultQueue: Exercise[] = [
+  { id: "bicep-curls", name: "Bicep Curls", sets: 3, reps: 10, rest: 60 },
+  { id: "lateral-raises", name: "Lateral Raises", sets: 3, reps: 12, rest: 45 },
+  { id: "jumping-jacks", name: "Jumping Jacks", sets: 3, reps: 20, rest: 30 },
 ];
+
+function SortableExercise({
+  exercise,
+  index,
+  onUpdate,
+  onRemove,
+}: {
+  exercise: Exercise;
+  index: number;
+  onUpdate: (index: number, field: "sets" | "reps" | "rest", value: number) => void;
+  onRemove: (index: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: exercise.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing p-1 text-muted hover:text-foreground"
+              aria-label="Drag to reorder"
+            >
+              ⠿
+            </button>
+            <h3
+              className="font-semibold text-lg"
+              data-testid="exercise-name"
+            >
+              {exercise.name}
+            </h3>
+          </div>
+          <button
+            onClick={() => onRemove(index)}
+            className="p-1 text-error hover:text-red-700 cursor-pointer"
+            aria-label="Remove"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label
+              htmlFor={`sets-${index}`}
+              className="block text-xs text-muted mb-1"
+            >
+              Sets
+            </label>
+            <input
+              id={`sets-${index}`}
+              type="number"
+              min={1}
+              value={exercise.sets}
+              onChange={(e) => onUpdate(index, "sets", Number(e.target.value))}
+              className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor={`reps-${index}`}
+              className="block text-xs text-muted mb-1"
+            >
+              Reps
+            </label>
+            <input
+              id={`reps-${index}`}
+              type="number"
+              min={1}
+              value={exercise.reps}
+              onChange={(e) => onUpdate(index, "reps", Number(e.target.value))}
+              className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor={`rest-${index}`}
+              className="block text-xs text-muted mb-1"
+            >
+              Rest (s)
+            </label>
+            <input
+              id={`rest-${index}`}
+              type="number"
+              min={10}
+              step={5}
+              value={exercise.rest}
+              onChange={(e) => onUpdate(index, "rest", Number(e.target.value))}
+              className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
+            />
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 export default function QueuePage() {
   const router = useRouter();
   const [queue, setQueue] = useState(defaultQueue);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   function updateExercise(
     index: number,
@@ -29,12 +166,15 @@ export default function QueuePage() {
     setQueue(queue.filter((_, i) => i !== index));
   }
 
-  function moveExercise(index: number, direction: "up" | "down") {
-    const target = direction === "up" ? index - 1 : index + 1;
-    if (target < 0 || target >= queue.length) return;
-    const updated = [...queue];
-    [updated[index], updated[target]] = [updated[target], updated[index]];
-    setQueue(updated);
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setQueue((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   }
 
   return (
@@ -44,107 +184,32 @@ export default function QueuePage() {
           Your Workout
         </h1>
         <p className="text-muted text-sm">
-          Customise your queue before starting.
+          Drag to reorder. Customise your queue before starting.
         </p>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {queue.map((exercise, i) => (
-          <Card key={`${exercise.name}-${i}`} className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h3
-                className="font-semibold text-lg"
-                data-testid="exercise-name"
-              >
-                {exercise.name}
-              </h3>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => moveExercise(i, "up")}
-                  disabled={i === 0}
-                  className="p-1 text-muted hover:text-foreground disabled:opacity-30 cursor-pointer"
-                  aria-label="Move up"
-                >
-                  ↑
-                </button>
-                <button
-                  onClick={() => moveExercise(i, "down")}
-                  disabled={i === queue.length - 1}
-                  className="p-1 text-muted hover:text-foreground disabled:opacity-30 cursor-pointer"
-                  aria-label="Move down"
-                >
-                  ↓
-                </button>
-                <button
-                  onClick={() => removeExercise(i)}
-                  className="p-1 text-error hover:text-red-700 cursor-pointer"
-                  aria-label="Remove"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label
-                  htmlFor={`sets-${i}`}
-                  className="block text-xs text-muted mb-1"
-                >
-                  Sets
-                </label>
-                <input
-                  id={`sets-${i}`}
-                  type="number"
-                  min={1}
-                  value={exercise.sets}
-                  onChange={(e) =>
-                    updateExercise(i, "sets", Number(e.target.value))
-                  }
-                  className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor={`reps-${i}`}
-                  className="block text-xs text-muted mb-1"
-                >
-                  Reps
-                </label>
-                <input
-                  id={`reps-${i}`}
-                  type="number"
-                  min={1}
-                  value={exercise.reps}
-                  onChange={(e) =>
-                    updateExercise(i, "reps", Number(e.target.value))
-                  }
-                  className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor={`rest-${i}`}
-                  className="block text-xs text-muted mb-1"
-                >
-                  Rest (s)
-                </label>
-                <input
-                  id={`rest-${i}`}
-                  type="number"
-                  min={10}
-                  step={5}
-                  value={exercise.rest}
-                  onChange={(e) =>
-                    updateExercise(i, "rest", Number(e.target.value))
-                  }
-                  className="w-full rounded-lg border border-muted-light px-3 py-2 text-center text-base bg-background"
-                />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={queue.map((e) => e.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="flex flex-col gap-4">
+            {queue.map((exercise, i) => (
+              <SortableExercise
+                key={exercise.id}
+                exercise={exercise}
+                index={i}
+                onUpdate={updateExercise}
+                onRemove={removeExercise}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <div className="flex gap-3">
         <Button variant="secondary" onClick={() => router.back()} className="flex-1">
