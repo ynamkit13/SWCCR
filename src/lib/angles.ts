@@ -12,6 +12,8 @@ const LANDMARKS = {
   RIGHT_HIP: 24,
   LEFT_KNEE: 25,
   RIGHT_KNEE: 26,
+  LEFT_ANKLE: 27,
+  RIGHT_ANKLE: 28,
 } as const;
 
 /**
@@ -57,4 +59,36 @@ export function getShoulderAbductionAngle(
   const elbow = landmarks[side === "left" ? LANDMARKS.LEFT_ELBOW : LANDMARKS.RIGHT_ELBOW];
   const angle = calculateAngle(hip, shoulder, elbow);
   return angle;
+}
+
+/**
+ * Get the knee angle (hip → knee → ankle) for the given side.
+ * 180° = straight leg, lower = more bent.
+ */
+export function getKneeAngle(
+  landmarks: Point[],
+  side: "left" | "right"
+): number {
+  const hip = landmarks[side === "left" ? LANDMARKS.LEFT_HIP : LANDMARKS.RIGHT_HIP];
+  const knee = landmarks[side === "left" ? LANDMARKS.LEFT_KNEE : LANDMARKS.RIGHT_KNEE];
+  const ankle = landmarks[side === "left" ? LANDMARKS.LEFT_ANKLE : LANDMARKS.RIGHT_ANKLE];
+  return calculateAngle(hip, knee, ankle);
+}
+
+/**
+ * Get the torso lean angle.
+ * Measures how much the midpoint of shoulders deviates from the midpoint of hips
+ * along the vertical axis. Returns degrees from vertical — 0° = perfectly upright.
+ */
+export function getTorsoLeanAngle(landmarks: Point[]): number {
+  const midShoulderX = (landmarks[LANDMARKS.LEFT_SHOULDER].x + landmarks[LANDMARKS.RIGHT_SHOULDER].x) / 2;
+  const midShoulderY = (landmarks[LANDMARKS.LEFT_SHOULDER].y + landmarks[LANDMARKS.RIGHT_SHOULDER].y) / 2;
+  const midHipX = (landmarks[LANDMARKS.LEFT_HIP].x + landmarks[LANDMARKS.RIGHT_HIP].x) / 2;
+  const midHipY = (landmarks[LANDMARKS.LEFT_HIP].y + landmarks[LANDMARKS.RIGHT_HIP].y) / 2;
+
+  const dx = midShoulderX - midHipX;
+  const dy = midHipY - midShoulderY; // positive = shoulders above hips (normal)
+
+  if (dy === 0) return 90;
+  return Math.atan(Math.abs(dx) / dy) * (180 / Math.PI);
 }
