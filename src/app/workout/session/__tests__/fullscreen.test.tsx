@@ -10,7 +10,8 @@ describe("Session Layout", () => {
       </SessionLayout>
     );
     const container = screen.getByTestId("child").parentElement;
-    expect(container).toHaveClass("w-screen");
+    expect(container).toHaveClass("fixed");
+    expect(container).toHaveClass("inset-0");
     expect(container).not.toHaveClass("max-w-5xl");
   });
 });

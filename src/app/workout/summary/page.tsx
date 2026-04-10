@@ -12,10 +12,14 @@ export default function SummaryPage() {
   const router = useRouter();
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [latestLog, setLatestLog] = useState<ReturnType<typeof getWorkoutLogs>[number] | null>(null);
 
-  // Get the most recent workout log
-  const logs = typeof window !== "undefined" ? getWorkoutLogs() : [];
-  const latestLog = logs[logs.length - 1];
+  useEffect(() => {
+    const logs = getWorkoutLogs();
+    if (logs.length > 0) {
+      setLatestLog(logs[logs.length - 1]);
+    }
+  }, []);
 
   const exercises = latestLog?.exercises ?? [];
   const totalExercises = exercises.length;
@@ -59,15 +63,15 @@ export default function SummaryPage() {
 
       <div className="grid grid-cols-3 gap-4 w-full max-w-md">
         <Card className="text-center">
-          <p className="text-2xl font-bold text-primary">{totalExercises || 3}</p>
+          <p className="text-2xl font-bold text-primary">{totalExercises}</p>
           <p className="text-xs text-muted">Exercises</p>
         </Card>
         <Card className="text-center">
-          <p className="text-2xl font-bold text-primary">{totalSets || 9}</p>
+          <p className="text-2xl font-bold text-primary">{totalSets}</p>
           <p className="text-xs text-muted">Sets</p>
         </Card>
         <Card className="text-center">
-          <p className="text-2xl font-bold text-primary">{totalReps || 42}</p>
+          <p className="text-2xl font-bold text-primary">{totalReps}</p>
           <p className="text-xs text-muted">Reps</p>
         </Card>
       </div>

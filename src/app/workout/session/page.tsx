@@ -317,7 +317,7 @@ export default function WorkoutSession() {
 
   // Workout phase — side-by-side layout
   return (
-    <div className="flex h-[calc(100vh-3rem)] gap-0">
+    <div className="flex h-full gap-0">
       {/* Camera section — 3/4 width */}
       <div ref={containerRef} data-testid="camera-section" className="relative w-3/4 h-full bg-black">
         <Webcam ref={webcamRef} className="absolute inset-0 w-full h-full" />
