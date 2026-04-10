@@ -34,6 +34,8 @@ vi.mock("@/lib/aiCoaching", () => ({
 vi.mock("@/lib/storage", () => ({
   saveWorkoutLog: vi.fn(),
   getWorkoutLogs: vi.fn().mockReturnValue([]),
+  getUserPreferences: vi.fn().mockReturnValue({ defaultMuted: false, audioDuckingEnabled: true }),
+  saveUserPreferences: vi.fn(),
 }));
 
 describe("Workout Flow", () => {

@@ -14,7 +14,7 @@ import { createPoseDetector, PoseDetector } from "@/lib/poseDetector";
 import { speak } from "@/lib/speech";
 import { generateCoachingMessage } from "@/lib/aiCoaching";
 import { Point } from "@/lib/angles";
-import { saveWorkoutLog } from "@/lib/storage";
+import { saveWorkoutLog, getUserPreferences, saveUserPreferences } from "@/lib/storage";
 
 type Exercise = { name: string; sets: number; reps: number; rest: number };
 
@@ -68,10 +68,12 @@ export default function WorkoutSession() {
 
   const exercise = exercises[exerciseIndex];
 
-  // Load exercises from localStorage after hydration
+  // Load exercises and preferences from localStorage after hydration
   useEffect(() => {
     const saved = localStorage.getItem("recommended_exercises");
     if (saved) setExercises(JSON.parse(saved));
+    const prefs = getUserPreferences();
+    setMuted(prefs.defaultMuted);
     setHydrated(true);
   }, []);
 
@@ -375,7 +377,11 @@ export default function WorkoutSession() {
 
           {/* Controls */}
           <div className="flex gap-2">
-            <MuteButton muted={muted} onToggle={() => setMuted(!muted)} />
+            <MuteButton muted={muted} onToggle={() => {
+              const next = !muted;
+              setMuted(next);
+              saveUserPreferences({ defaultMuted: next });
+            }} />
             <button
               onClick={() => setShowEditPanel(true)}
               aria-label="Edit workout"
