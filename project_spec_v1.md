@@ -6,11 +6,11 @@
 - [x] Building an MVP
 
 **Goal statement:**
-> AI Fitness Trainer is a mobile app that coaches solo gym-goers and 
+> AI Fitness Trainer is a web app that coaches solo gym-goers and 
 > home workout enthusiasts through real-time pose detection, rep counting, 
 > and AI-powered voice feedback — giving anyone the experience of a personal 
-> trainer without the cost or intimidation, entirely on-device with no data 
-> leaving the phone.
+> trainer without the cost or intimidation, entirely in-browser with no data 
+> leaving the device.
 
 ---
 
@@ -18,7 +18,7 @@
 
 ### MVP (Milestone 1)
 - Onboarding quiz — fitness level, frequency, goal
-- Phone setup guide and pre-flight camera check
+- Device setup guide and pre-flight camera check
 - AI-generated workout queue with full user customisation
 - Real-time pose estimation via camera with skeletal overlay
 - Exercises: Bicep Curls, Lateral Raises, Jumping Jacks
@@ -26,24 +26,23 @@
   AI coaching between sets
 - Goal-based rep counter
 - 4-tier voice feedback system with priority order
-- Smart audio output — headphone detection, audio ducking, 
-  mute button
+- Smart audio output — audio ducking, mute button
 - Rest timer with AI-recommended duration, user adjustable, 
   snooze option
 - Post-workout AI summary
-- Workout logger saved locally via AsyncStorage
+- Workout logger saved locally via localStorage / IndexedDB
 
 **MVP is done when:** Every feature above is working end-to-end 
-on an iPhone.
+in Chrome on desktop.
 
 ### Version 2 (Milestone 2)
 - Adding more exercises
 - Camera features — front vs side view detection, side view 
   recommendation, out-of-frame joint interpolation
 - Authentication — user accounts, login (Clerk)
-- Cloud sync — AsyncStorage migrates to Supabase
+- Cloud sync — localStorage migrates to Supabase
 - Progress analytics, streaks, and charts over time
-- Workout recordings — saves to phone gallery
+- Workout recordings — saves to device / cloud storage
 - In-app community (similar to Apple Fitness+)
 
 ### Version 3 (Milestone 3)
@@ -67,10 +66,11 @@ on an iPhone.
 > do — without the cost or intimidation of a human personal trainer.
 
 **User context:**
-> Used during workouts, alone, at the gym or at home. The phone is 
-> propped up in front of them. They may have headphones in and music 
-> playing. They need the app to be glanceable and hands-free — they 
-> shouldn't need to touch their phone once the session starts.
+> Used during workouts, alone, at the gym or at home. Their device 
+> (laptop/tablet/phone) is propped up in front of them. They may 
+> have headphones in and music playing. They need the app to be 
+> glanceable and hands-free — they shouldn't need to touch their 
+> device once the session starts.
 
 ### What problems does it solve?
 1. No guidance — new gym-goers don't know what exercises to do or 
@@ -85,7 +85,7 @@ on an iPhone.
 #### Flow 1 — Onboarding (first launch only)
 1. User opens app for the first time
 2. Greeted with a welcome screen explaining what the app does
-3. Presented with setup guide — ideal phone height, distance, 
+3. Presented with setup guide — ideal device height, distance, 
    and angle for workouts
 4. Onboarding quiz:
    - How long have you been working out?
@@ -96,7 +96,7 @@ on an iPhone.
 6. User reviews AI recommendations and can adjust sets, reps, 
    and rest durations per exercise if they wish — or confirm 
    as-is
-7. Preferences saved locally to AsyncStorage
+7. Preferences saved locally to localStorage
 8. User lands on home screen
 
 #### Flow 2 — Pre-Workout Setup
@@ -111,7 +111,7 @@ on an iPhone.
 6. If full skeleton detected → green confirmation, 
    "You're good to go"
 7. If skeleton not fully detected → warning with instructions 
-   to adjust phone position
+   to adjust device position
 8. User taps Begin Workout
 
 #### Flow 3 — During Workout
@@ -141,7 +141,7 @@ on an iPhone.
    - Exercises completed
    - Total sets and reps
    - AI coaching notes based on form data from the session
-3. Workout saved to logger in AsyncStorage
+3. Workout saved to logger in localStorage
 4. User returns to home screen
 
 ---
@@ -152,49 +152,51 @@ on an iPhone.
 | Component | Choice | Notes |
 |-----------|--------|-------|
 | Language | TypeScript | |
-| Frontend Framework | Expo (React Native) | |
-| Styling | NativeWind (Tailwind for React Native) | |
+| Frontend Framework | Next.js (React) | Web-first, mobile later |
+| Styling | Tailwind CSS | |
 | Component Library | Claude recommends | |
 | Backend Framework | None for MVP — Claude recommends for v2 | |
-| Database | AsyncStorage (MVP) → Supabase (v2) | Migrates when auth is added |
+| Database | localStorage / IndexedDB (MVP) → Supabase (v2) | Migrates when auth is added |
 | Authentication | None for MVP — Clerk (v2) | |
-| Hosting (Frontend) | Expo Go (dev) / EAS Build (distribution) | |
-| Hosting (Backend) | None for MVP — Claude recommends for v2 | |
+| Hosting | Vercel | Recommended for Next.js |
 | Payments | None — future versions only | Not a current goal. Stack to be determined when monetization is revisited. |
 | Email | None for MVP — Resend (v2) | For auth emails — verification, password reset |
 | Object Storage | None for MVP — Cloudflare R2 (v2) | For workout recordings in v2 |
 | AI/ML | Claude recommends best fit | Anthropic API key available |
-| Pose Detection | MediaPipe | Runs fully on-device |
-| Voice Output | expo-speech | Built into Expo |
+| Pose Detection | MediaPipe JS (WASM) | Runs fully in-browser via WebRTC |
+| Voice Output | Web Speech API | Built into modern browsers |
+| Testing | Vitest + React Testing Library | TDD workflow |
+| Linting | ESLint + Prettier | |
 
 ### Technical Architecture
 
 **System overview:**
-AI Fitness Trainer is a fully client-side mobile application. 
+AI Fitness Trainer is a fully client-side web application. 
 There is no backend server in the MVP. All processing — pose 
-detection, rep counting, form analysis — happens on-device. 
+detection, rep counting, form analysis — happens in-browser. 
 The only external call is to an AI/ML API between sets for 
 contextual coaching. Workout data and user preferences are 
-stored locally via AsyncStorage.
+stored locally via localStorage / IndexedDB.
 
 **Key components:**
-1. Camera + MediaPipe — captures live camera feed, detects 
-   33 body landmarks in real time, renders skeletal overlay
+1. Camera + MediaPipe JS — WebRTC captures live camera feed, 
+   MediaPipe WASM detects 33 body landmarks in real time, 
+   Canvas renders skeletal overlay
 2. Rep Counter + Form Analyser — calculates joint angles from 
    MediaPipe landmarks, detects rep completion, triggers 
    immediate hardcoded voice feedback on bad form
 3. AI Coaching Engine — sends set data to LLM API between 
    sets, receives contextual coaching, delivers via 
-   expo-speech or on-screen text
-4. Audio Manager — handles headphone detection, audio ducking, 
-   mute state, and routes feedback to correct output
+   Web Speech API or on-screen text
+4. Audio Manager — handles audio ducking, mute state, and 
+   routes feedback to correct output
 5. Workout Queue Manager — stores the current session's 
    exercise queue, tracks progress through sets and exercises, 
    manages rest timer
-6. Local Storage — AsyncStorage reads and writes for onboarding 
-   data, user preferences, and workout logs
+6. Local Storage — localStorage / IndexedDB reads and writes 
+   for onboarding data, user preferences, and workout logs
 
-**Database schema (AsyncStorage — MVP):**
+**Database schema (localStorage / IndexedDB — MVP):**
 
 user_profile
 - fitnessLevel: string (never/beginner/intermediate)
@@ -247,12 +249,9 @@ POST /ai-workout-recommendation (called on home screen)
 ### Infrastructure to Provision
 Before building, set up:
 - [ ] Anthropic API key (already have) — confirm billing enabled
-- [ ] Expo account — for Expo Go and EAS Build
-- [ ] EAS CLI installed locally — for building and distributing 
-      the app
-- [ ] Node.js installed locally — required for Expo
-- [ ] Expo Go app installed on iPhone — for live testing 
-      during development
+- [ ] Node.js installed locally — required for Next.js
+- [ ] Vercel account — for deployment
+- [ ] GitHub repo — for version control and CI/CD
 
 ---
 
@@ -273,12 +272,10 @@ Before building, set up:
 - [ ] Which AI/ML provider gives the best balance of speed 
       and cost for real-time between-set coaching? 
       (Claude Code to benchmark)
-- [ ] Can MediaPipe run at a stable 30fps on older iPhones 
-      (iPhone X, 11) alongside expo-speech and the 
-      skeletal overlay simultaneously?
-- [ ] Does audio ducking work reliably on iOS via Expo when 
-      third-party audio apps (music, podcasts, calls etc.) 
-      are playing in the background?
+- [ ] Can MediaPipe JS (WASM) run at a stable 30fps in Chrome 
+      alongside Web Speech API and Canvas skeletal overlay?
+- [ ] Does the Web Speech API work reliably across browsers 
+      when third-party audio is playing?
 - [ ] What is the exact joint angle threshold per exercise 
       that defines a completed rep and bad form? 
       (requires testing and tuning)
@@ -300,28 +297,29 @@ Before building, set up:
 ## Summary
 
 **One-liner:** 
-An on-device AI fitness coach that tracks your form, counts 
+An in-browser AI fitness coach that tracks your form, counts 
 your reps, and coaches you through workouts in real time — 
-no trainer, no gym membership, no data leaving your phone.
+no trainer, no gym membership, no data leaving your device.
 
 **MVP scope:** 
 Onboarding quiz, AI-generated workout queue, real-time pose 
 estimation with skeletal overlay, goal-based rep counting, 
 two-system AI feedback (live MediaPipe form correction + 
 LLM coaching between sets), smart audio output, rest timer, 
-workout logger, and post-workout AI summary. iOS only, 
-portrait mode only, fully on-device.
+workout logger, and post-workout AI summary. Web-first 
+(Chrome), fully client-side.
 
 **Tech stack:** 
-TypeScript, Expo (React Native), MediaPipe, expo-speech, 
-AsyncStorage, AI/ML provider (Claude Code recommends)
+TypeScript, Next.js, Tailwind CSS, MediaPipe JS, Web Speech 
+API, localStorage / IndexedDB, AI/ML provider (Claude Code 
+recommends)
 
 **First milestone "done" looks like:** 
-A user can open the app on an iPhone, complete onboarding, 
+A user can open the app in Chrome, complete onboarding, 
 receive an AI-recommended workout, perform bicep curls with 
 a working rep counter and live form feedback, rest between 
 sets with a timer, and see a post-workout summary — all 
-without any data leaving their phone.
+without any data leaving their device.
 
 ---
 > **Next step:** Once this spec is complete, move to the 
