@@ -69,15 +69,12 @@ describe("RepCounter", () => {
     });
 
     it("detects a bicep curl rep (down → up → down)", () => {
-      // Start down
-      counter.update(bicepCurlDown());
-      counter.update(bicepCurlDown());
-      // Go up
-      counter.update(bicepCurlUp());
-      counter.update(bicepCurlUp());
-      // Come back down
-      counter.update(bicepCurlDown());
-      counter.update(bicepCurlDown());
+      // Start down (3+ frames)
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlDown());
+      // Go up (3+ frames)
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlUp());
+      // Come back down (3+ frames)
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlDown());
 
       expect(counter.count).toBe(1);
     });
@@ -92,11 +89,53 @@ describe("RepCounter", () => {
     });
 
     it("resets count", () => {
-      counter.update(bicepCurlDown());
-      counter.update(bicepCurlUp());
-      counter.update(bicepCurlDown());
+      // Do a full rep first
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlDown());
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlUp());
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlDown());
       counter.reset();
       expect(counter.count).toBe(0);
+    });
+
+    it("does NOT count reps when landmarks stay constant (sitting still)", () => {
+      // Same exact position repeated many times — should never count
+      const sitting = bicepCurlDown(); // arms at sides, sitting
+      for (let i = 0; i < 100; i++) {
+        counter.update(sitting);
+      }
+      expect(counter.count).toBe(0);
+    });
+
+    it("does NOT count reps from small angle jitter", () => {
+      // Simulate jitter: angle oscillates slightly around 160° (down position)
+      const slightlyBent = mockLandmarks({
+        11: { x: 0.4, y: 0.3 },
+        12: { x: 0.6, y: 0.3 },
+        13: { x: 0.4, y: 0.5 },
+        14: { x: 0.6, y: 0.5 },
+        15: { x: 0.4, y: 0.68 }, // slightly different from full down
+        16: { x: 0.6, y: 0.68 },
+      });
+      for (let i = 0; i < 50; i++) {
+        counter.update(i % 2 === 0 ? bicepCurlDown() : slightlyBent);
+      }
+      expect(counter.count).toBe(0);
+    });
+
+    it("requires sustained position in each phase (minimum frames)", () => {
+      // Single frame at "up" shouldn't count — need sustained hold
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlDown());
+      counter.update(bicepCurlUp()); // only 1 frame at up
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlDown());
+      expect(counter.count).toBe(0);
+    });
+
+    it("counts rep with sustained movement through full range", () => {
+      // 5+ frames at down, 5+ frames at up, 5+ frames at down = 1 rep
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlDown());
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlUp());
+      for (let i = 0; i < 5; i++) counter.update(bicepCurlDown());
+      expect(counter.count).toBe(1);
     });
   });
 
@@ -108,12 +147,9 @@ describe("RepCounter", () => {
     });
 
     it("detects a lateral raise rep (down → up → down)", () => {
-      counter.update(lateralRaiseDown());
-      counter.update(lateralRaiseDown());
-      counter.update(lateralRaiseUp());
-      counter.update(lateralRaiseUp());
-      counter.update(lateralRaiseDown());
-      counter.update(lateralRaiseDown());
+      for (let i = 0; i < 5; i++) counter.update(lateralRaiseDown());
+      for (let i = 0; i < 5; i++) counter.update(lateralRaiseUp());
+      for (let i = 0; i < 5; i++) counter.update(lateralRaiseDown());
 
       expect(counter.count).toBe(1);
     });
