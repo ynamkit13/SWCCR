@@ -313,72 +313,86 @@ export default function WorkoutSession() {
     );
   }
 
-  // Workout phase
+  // Workout phase — side-by-side layout
   return (
-    <div ref={containerRef} className="relative w-full h-[calc(100vh-3rem)] flex flex-col">
-      {/* Camera feed */}
-      <Webcam ref={webcamRef} className="absolute inset-0 w-full h-full" />
+    <div className="flex h-[calc(100vh-3rem)] gap-0">
+      {/* Camera section — 3/4 width */}
+      <div ref={containerRef} data-testid="camera-section" className="relative w-3/4 h-full bg-black">
+        <Webcam ref={webcamRef} className="absolute inset-0 w-full h-full" />
+        <SkeletonOverlay
+          landmarks={landmarks}
+          width={containerSize.width}
+          height={containerSize.height}
+          mirrored
+          className="absolute inset-0 w-full h-full"
+        />
+        {/* Form feedback overlay on camera */}
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
+          <FormFeedback message={feedback} />
+        </div>
+        {/* Pose status overlay */}
+        {!poseReady && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-black/50 backdrop-blur-sm rounded-xl px-4 py-2">
+              <p className="text-white/70 text-sm animate-pulse">Loading pose detection...</p>
+            </div>
+          </div>
+        )}
+        {poseReady && !landmarks && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-black/50 backdrop-blur-sm rounded-xl px-4 py-2">
+              <p className="text-white/70 text-sm">Stand in view of the camera</p>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {/* Skeleton overlay — dimensions match actual container */}
-      <SkeletonOverlay
-        landmarks={landmarks}
-        width={containerSize.width}
-        height={containerSize.height}
-        mirrored
-        className="absolute inset-0 w-full h-full"
-      />
-
-      {/* HUD overlay */}
-      <div className="relative z-10 flex flex-col justify-between h-full p-4">
-        {/* Top bar */}
-        <div className="flex items-center justify-between">
-          <div className="bg-black/50 backdrop-blur-sm rounded-xl px-4 py-2">
-            <h1 className="text-white text-xl font-bold">{exercise.name}</h1>
-            <p className="text-white/70 text-sm">
+      {/* Side panel — 1/4 width */}
+      <div data-testid="side-panel" className="w-1/4 h-full bg-surface flex flex-col justify-between p-5 border-l border-muted-light">
+        {/* Exercise info */}
+        <div className="flex flex-col gap-6">
+          <div>
+            <h1 className="text-xl font-bold">{exercise.name}</h1>
+            <p className="text-muted text-sm">
               Set {currentSet} of {exercise.sets}
             </p>
           </div>
+
+          {/* Rep counter */}
+          <div className="bg-background rounded-2xl p-4 text-center">
+            <p className="text-5xl font-bold text-primary">{currentRep}</p>
+            <p className="text-muted text-sm">/ {exercise.reps}</p>
+            <p className="text-sm font-medium mt-1 text-primary">
+              {currentRep >= exercise.reps
+                ? "Set complete!"
+                : `${exercise.reps - currentRep} more to go!`}
+            </p>
+          </div>
+
+          {/* Controls */}
           <div className="flex gap-2">
+            <MuteButton muted={muted} onToggle={() => setMuted(!muted)} />
             <button
               onClick={() => setShowEditPanel(true)}
               aria-label="Edit workout"
-              className="bg-white rounded-full w-11 h-11 flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors cursor-pointer"
+              className="bg-background rounded-full w-11 h-11 flex items-center justify-center shadow-sm border border-muted-light hover:bg-gray-100 transition-colors cursor-pointer"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5f6368" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f6368" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
             </button>
-            <MuteButton muted={muted} onToggle={() => setMuted(!muted)} />
           </div>
         </div>
 
-        {/* Middle: form feedback + pose status */}
-        <div className="flex flex-col items-center gap-2">
-          <FormFeedback message={feedback} />
-          {!poseReady && (
-            <div className="bg-black/50 backdrop-blur-sm rounded-xl px-4 py-2">
-              <p className="text-white/70 text-sm animate-pulse">Loading pose detection...</p>
-            </div>
-          )}
-          {poseReady && !landmarks && (
-            <div className="bg-black/50 backdrop-blur-sm rounded-xl px-4 py-2">
-              <p className="text-white/70 text-sm">Stand in view of the camera</p>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom: rep counter + manual complete */}
-        <div className="flex flex-col items-center gap-4 pb-4">
-          <RepCounterHUD current={currentRep} target={exercise.reps} />
-          <Button
-            onClick={completeSet}
-            variant="secondary"
-            className="text-sm opacity-70"
-          >
-            Complete Set Manually
-          </Button>
-        </div>
+        {/* Bottom: manual complete */}
+        <Button
+          onClick={completeSet}
+          variant="secondary"
+          className="w-full text-sm"
+        >
+          Complete Set Manually
+        </Button>
       </div>
 
       {/* Edit Panel Overlay */}
