@@ -11,6 +11,12 @@ vi.mock("next/navigation", () => ({
 // Mock storage
 vi.mock("@/lib/storage", () => ({
   getWorkoutLogs: vi.fn().mockReturnValue([]),
+  getUserProfile: vi.fn().mockReturnValue(null),
+}));
+
+// Mock recommendations
+vi.mock("@/lib/recommendations", () => ({
+  getSmartRecommendations: vi.fn().mockReturnValue([]),
 }));
 
 describe("Home Screen", () => {

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
-import { getWorkoutLogs, WorkoutLog } from "@/lib/storage";
+import { getWorkoutLogs, getUserProfile, WorkoutLog } from "@/lib/storage";
+import { getSmartRecommendations } from "@/lib/recommendations";
 
 const defaultWorkout = [
   { name: "Bicep Curls", sets: 3, reps: 10 },
@@ -23,13 +24,18 @@ export default function HomePage({
   const [todaysWorkout, setTodaysWorkout] = useState(defaultWorkout);
 
   useEffect(() => {
-    if (!showEmptyHistory) {
-      const logs = getWorkoutLogs();
-      setHistory(logs);
-    }
+    const logs = showEmptyHistory ? [] : getWorkoutLogs();
+    setHistory(logs);
 
-    // Load recommended exercises if available
-    if (typeof window !== "undefined") {
+    // Generate today's workout based on history + profile
+    const profile = getUserProfile();
+    if (profile) {
+      const recommended = getSmartRecommendations(profile, logs);
+      setTodaysWorkout(recommended);
+      // Save so queue page picks it up
+      localStorage.setItem("recommended_exercises", JSON.stringify(recommended));
+    } else {
+      // Fallback: load saved exercises if no profile yet
       const saved = localStorage.getItem("recommended_exercises");
       if (saved) {
         const exercises = JSON.parse(saved);
