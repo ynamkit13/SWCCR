@@ -1,27 +1,17 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
+import { getWorkoutLogs, getUserProfile, WorkoutLog } from "@/lib/storage";
+import { getSmartRecommendations } from "@/lib/recommendations";
 
-const todaysWorkout = [
+const defaultWorkout = [
   { name: "Bicep Curls", sets: 3, reps: 10 },
   { name: "Lateral Raises", sets: 3, reps: 12 },
   { name: "Jumping Jacks", sets: 3, reps: 20 },
-];
-
-const mockHistory = [
-  {
-    date: "2026-04-08",
-    exercises: ["Bicep Curls", "Lateral Raises"],
-    totalReps: 66,
-  },
-  {
-    date: "2026-04-06",
-    exercises: ["Jumping Jacks", "Bicep Curls"],
-    totalReps: 90,
-  },
 ];
 
 export default function HomePage({
@@ -30,7 +20,33 @@ export default function HomePage({
   showEmptyHistory?: boolean;
 }) {
   const router = useRouter();
-  const history = showEmptyHistory ? [] : mockHistory;
+  const [history, setHistory] = useState<WorkoutLog[]>([]);
+  const [todaysWorkout, setTodaysWorkout] = useState(defaultWorkout);
+
+  useEffect(() => {
+    const logs = showEmptyHistory ? [] : getWorkoutLogs();
+    setHistory(logs);
+
+    // Generate today's workout based on history + profile
+    const profile = getUserProfile();
+    if (profile) {
+      const recommended = getSmartRecommendations(profile, logs);
+      setTodaysWorkout(recommended);
+      // Save so queue page picks it up
+      localStorage.setItem("recommended_exercises", JSON.stringify(recommended));
+    } else {
+      // Fallback: load saved exercises if no profile yet
+      const saved = localStorage.getItem("recommended_exercises");
+      if (saved) {
+        const exercises = JSON.parse(saved);
+        setTodaysWorkout(exercises.map((e: { name: string; sets: number; reps: number }) => ({
+          name: e.name,
+          sets: e.sets,
+          reps: e.reps,
+        })));
+      }
+    }
+  }, [showEmptyHistory]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -69,17 +85,23 @@ export default function HomePage({
           </Card>
         ) : (
           <div className="flex flex-col gap-3">
-            {history.map((entry) => (
-              <Card key={entry.date} className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{entry.date}</p>
-                  <p className="text-sm text-muted">
-                    {entry.exercises.join(", ")}
-                  </p>
-                </div>
-                <Badge variant="green">{entry.totalReps} reps</Badge>
-              </Card>
-            ))}
+            {history.slice(-5).reverse().map((entry) => {
+              const totalReps = entry.exercises.reduce(
+                (sum, ex) => sum + ex.sets.reduce((s, set) => s + set.repsCompleted, 0),
+                0
+              );
+              return (
+                <Card key={entry.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{entry.date}</p>
+                    <p className="text-sm text-muted">
+                      {entry.exercises.map((e) => e.exerciseName).join(", ")}
+                    </p>
+                  </div>
+                  <Badge variant="green">{totalReps} reps</Badge>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

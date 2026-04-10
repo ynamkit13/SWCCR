@@ -7,13 +7,22 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-// Mock the Webcam component since we can't access camera in tests
 vi.mock("@/components/Webcam", () => ({
-  Webcam: ({ className }: { className?: string }) => (
-    <div data-testid="webcam-mock" className={className}>
-      Webcam Mock
-    </div>
+  Webcam: vi.fn().mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (_props: unknown, _ref: unknown) => <div data-testid="webcam-mock">Webcam Mock</div>
   ),
+}));
+
+vi.mock("@/components/SkeletonOverlay", () => ({
+  SkeletonOverlay: () => <canvas data-testid="skeleton-mock" />,
+}));
+
+vi.mock("@/lib/poseDetector", () => ({
+  createPoseDetector: vi.fn().mockResolvedValue({
+    detect: vi.fn().mockReturnValue(null),
+    close: vi.fn(),
+  }),
 }));
 
 describe("Workout Session Screen", () => {

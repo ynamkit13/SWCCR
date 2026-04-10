@@ -6,13 +6,11 @@ import WorkoutSession from "../page";
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
-  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/components/Webcam", () => ({
   Webcam: vi.fn().mockImplementation(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (_props: unknown, _ref: unknown) => <div data-testid="webcam-mock">Webcam Mock</div>
+    () => <div data-testid="webcam-mock">Webcam Mock</div>
   ),
 }));
 
@@ -38,27 +36,24 @@ vi.mock("@/lib/storage", () => ({
   saveUserPreferences: vi.fn(),
 }));
 
-describe("Workout Flow", () => {
+describe("Rest Timer - Start Now", () => {
   beforeEach(() => {
     mockPush.mockClear();
   });
 
-  it("shows a Complete Set Manually button", () => {
+  it("shows Start Now button during countdown", async () => {
     render(<WorkoutSession />);
-    expect(screen.getByRole("button", { name: /complete set manually/i })).toBeInTheDocument();
+    // Complete a set to enter rest phase
+    await userEvent.click(screen.getByRole("button", { name: /complete set manually/i }));
+    // Should show Start Now during countdown (timer > 0)
+    expect(screen.getByRole("button", { name: /start now/i })).toBeInTheDocument();
   });
 
-  it("clicking Complete Set Manually shows the rest timer", async () => {
+  it("clicking Start Now exits rest phase", async () => {
     render(<WorkoutSession />);
     await userEvent.click(screen.getByRole("button", { name: /complete set manually/i }));
-    expect(screen.getByText(/rest/i)).toBeInTheDocument();
-  });
-
-  it("shows rest timer with countdown after completing set", async () => {
-    render(<WorkoutSession />);
-    await userEvent.click(screen.getByRole("button", { name: /complete set manually/i }));
-    // Should show the rest countdown
-    expect(screen.getByText(/rest/i)).toBeInTheDocument();
-    expect(screen.getByText(/seconds remaining/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /start now/i }));
+    // Should be back in workout phase showing set 2
+    expect(screen.getByText(/set 2 of 3/i)).toBeInTheDocument();
   });
 });

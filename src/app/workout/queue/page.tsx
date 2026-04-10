@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { warmUpSpeech } from "@/lib/speech";
 
 type Exercise = {
   id: string;
@@ -143,7 +144,21 @@ function SortableExercise({
 
 export default function QueuePage() {
   const router = useRouter();
-  const [queue, setQueue] = useState(defaultQueue);
+  const [queue, setQueue] = useState<Exercise[]>(defaultQueue);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("recommended_exercises");
+    if (saved) {
+      const exercises = JSON.parse(saved);
+      setQueue(exercises.map((e: { name: string; sets: number; reps: number; rest: number }) => ({
+        id: e.name.toLowerCase().replace(/\s+/g, "-"),
+        name: e.name,
+        sets: e.sets,
+        reps: e.reps,
+        rest: e.rest,
+      })));
+    }
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -215,7 +230,13 @@ export default function QueuePage() {
         <Button variant="secondary" onClick={() => router.back()} className="flex-1">
           Back
         </Button>
-        <Button onClick={() => router.push("/workout/session")} className="flex-1 text-lg py-4">Start Workout</Button>
+        <Button onClick={() => {
+          // Save customised queue so session page picks it up
+          const toSave = queue.map((e) => ({ name: e.name, sets: e.sets, reps: e.reps, rest: e.rest }));
+          localStorage.setItem("recommended_exercises", JSON.stringify(toSave));
+          warmUpSpeech();
+          router.push("/workout/session");
+        }} className="flex-1 text-lg py-4">Start Workout</Button>
       </div>
     </div>
   );

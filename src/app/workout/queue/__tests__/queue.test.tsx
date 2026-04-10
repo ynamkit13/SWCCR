@@ -61,4 +61,15 @@ describe("Pre-Workout Queue Customisation", () => {
     await userEvent.click(screen.getByRole("button", { name: /back/i }));
     expect(mockBack).toHaveBeenCalledOnce();
   });
+
+  it("saves customised queue to localStorage on Start Workout", async () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
+    render(<QueuePage />);
+    await userEvent.click(screen.getByRole("button", { name: /start workout/i }));
+    expect(setItemSpy).toHaveBeenCalledWith(
+      "recommended_exercises",
+      expect.any(String)
+    );
+    setItemSpy.mockRestore();
+  });
 });

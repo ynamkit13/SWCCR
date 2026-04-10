@@ -42,7 +42,7 @@ Fully client-side web app. No backend server in the MVP. See [docs/architecture.
 5. **Workout Queue Manager** — Session exercise queue, set/rep tracking, rest timer
 6. **Local Storage** — localStorage / IndexedDB for all persistent data
 
-**Tech stack:** TypeScript, Next.js, Tailwind CSS, Vitest + React Testing Library, MediaPipe JS, Web Speech API, ESLint + Prettier
+**Tech stack:** TypeScript, Next.js, Tailwind CSS, Vitest + React Testing Library, MediaPipe JS, Web Speech API, Anthropic SDK (Claude), @dnd-kit, ESLint + Prettier
 
 ---
 

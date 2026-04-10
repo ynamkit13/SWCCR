@@ -38,6 +38,14 @@ export default function QuizPage() {
 
   function handleNext() {
     if (isLastStep) {
+      // Save quiz answers to localStorage for recommendations page
+      if (typeof window !== "undefined") {
+        localStorage.setItem("quiz_answers", JSON.stringify({
+          experience: answers[0],
+          frequency: answers[1],
+          goal: answers[2],
+        }));
+      }
       router.push("/onboarding/recommendations");
     } else {
       setStep(step + 1);
