@@ -26,6 +26,7 @@ describe("PoseDetector", () => {
   });
 
   it("returns landmark data in expected format", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { __mockDetect } = await import("@mediapipe/tasks-vision") as any;
     __mockDetect.mockReturnValue({
       landmarks: [[
@@ -45,6 +46,7 @@ describe("PoseDetector", () => {
   });
 
   it("returns null when no person detected", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { __mockDetect } = await import("@mediapipe/tasks-vision") as any;
     __mockDetect.mockReturnValue({ landmarks: [] });
 

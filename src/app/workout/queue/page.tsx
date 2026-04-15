@@ -150,6 +150,7 @@ export default function QueuePage() {
     const saved = localStorage.getItem("recommended_exercises");
     if (saved) {
       const exercises = JSON.parse(saved);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reading from localStorage on mount
       setQueue(exercises.map((e: { name: string; sets: number; reps: number; rest: number }) => ({
         id: e.name.toLowerCase().replace(/\s+/g, "-"),
         name: e.name,
