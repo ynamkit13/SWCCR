@@ -16,6 +16,7 @@ const mockCtx = {
   lineWidth: 0,
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(mockCtx) as any;
 
 const mockLandmarks = Array.from({ length: 33 }, (_, i) => ({

@@ -25,6 +25,7 @@ export default function HomePage({
 
   useEffect(() => {
     const logs = showEmptyHistory ? [] : getWorkoutLogs();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading from localStorage on mount
     setHistory(logs);
 
     // Generate today's workout based on history + profile

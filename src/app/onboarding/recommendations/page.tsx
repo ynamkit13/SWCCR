@@ -45,6 +45,7 @@ export default function RecommendationsPage() {
       const raw = localStorage.getItem("quiz_answers");
       if (raw) {
         const answers = JSON.parse(raw);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- reading from localStorage on mount
         setExercises(getRecommendations(answers));
       }
     }
@@ -106,7 +107,7 @@ export default function RecommendationsPage() {
           Your Recommended Plan
         </h1>
         <p className="text-muted text-sm">
-          These are recommended starting values. Adjust anything that doesn't
+          These are recommended starting values. Adjust anything that doesn&apos;t
           feel right.
         </p>
       </div>

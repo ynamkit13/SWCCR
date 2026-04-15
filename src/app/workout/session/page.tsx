@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Webcam, WebcamHandle } from "@/components/Webcam";
 import { SkeletonOverlay } from "@/components/SkeletonOverlay";
-import { RepCounter as RepCounterHUD } from "@/components/HUD/RepCounter";
 import { MuteButton } from "@/components/HUD/MuteButton";
 import { FormFeedback } from "@/components/HUD/FormFeedback";
 import { Button } from "@/components/Button";
@@ -25,11 +24,6 @@ const defaultExercises: Exercise[] = [
 ];
 
 type Phase = "workout" | "rest";
-
-type SetResult = {
-  repsCompleted: number;
-  formIssues: string[];
-};
 
 export default function WorkoutSession() {
   const router = useRouter();

@@ -55,7 +55,7 @@ export class RepCounter {
     // Skip frame if key landmarks have low visibility
     const keyIndices = [11, 12, 13, 14, 15, 16]; // shoulders, elbows, wrists
     const hasLowVisibility = keyIndices.some(
-      (i) => landmarks[i] && (landmarks[i] as any).visibility !== undefined && (landmarks[i] as any).visibility < 0.7
+      (i) => landmarks[i] && (landmarks[i] as unknown as { visibility?: number }).visibility !== undefined && (landmarks[i] as unknown as { visibility?: number }).visibility! < 0.7
     );
     if (hasLowVisibility) return;
 

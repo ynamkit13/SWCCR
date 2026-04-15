@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Store onend callbacks so we can simulate speech finishing
 let onendCallbacks: (() => void)[] = [];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockSpeak = vi.fn().mockImplementation((utterance: any) => {
   // Store the onend callback so tests can trigger it
   if (utterance.onend) {
@@ -14,6 +15,7 @@ const mockGetVoices = vi.fn().mockReturnValue([{ name: "test" }]);
 const mockSpeaking = { value: false };
 
 // Mock SpeechSynthesisUtterance globally
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).SpeechSynthesisUtterance = class {
   text: string;
   rate = 1;
@@ -36,6 +38,7 @@ Object.defineProperty(globalThis, "window", {
       },
       onvoiceschanged: null,
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     SpeechSynthesisUtterance: (globalThis as any).SpeechSynthesisUtterance,
   },
   writable: true,
